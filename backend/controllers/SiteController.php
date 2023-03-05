@@ -2,12 +2,13 @@
 
 namespace backend\controllers;
 
-use common\models\LoginForm;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
+use common\models\LoginForm;
+use backend\models\Apples;
 
 /**
  * Site controller
@@ -24,11 +25,11 @@ class SiteController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['login', 'error'],
+                        'actions' => ['login', 'error', 'respass'],
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'index'],
+                        'actions' => ['logout', 'index', 'generate'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -62,7 +63,28 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $apples = Apples::find()->all();
+
+        return $this->render('index', [
+            'apples' => $apples,
+        ]);
+    }
+
+    /**
+     * Generate apples
+     *
+     * @return string
+     */
+    public function actionGenerate()
+    {
+        Apples::deleteAll();
+
+        $count = mt_rand(4, 12);
+        for($i = 1; $i <= $count; $i++) {
+            Apples::create();
+        }
+
+        return $this->redirect(['index']);
     }
 
     /**
@@ -101,4 +123,15 @@ class SiteController extends Controller
 
         return $this->goHome();
     }
+
+/*
+    public function actionRespass()
+    {
+        $user = User::findIdentity(1);
+        $user->setPassword('1122334455');
+        $user->save();
+
+        return $this->redirect(['site/index']);
+    }
+*/
 }
