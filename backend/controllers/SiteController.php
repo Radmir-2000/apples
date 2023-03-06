@@ -3,12 +3,12 @@
 namespace backend\controllers;
 
 use Yii;
-use yii\filters\VerbFilter;
+use common\models\LoginForm;
+use backend\models\Apples;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
-use common\models\LoginForm;
-use backend\models\Apples;
+use yii\web\NotFoundHttpException;
 
 /**
  * Site controller
@@ -29,16 +29,10 @@ class SiteController extends Controller
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'index', 'generate'],
+                        'actions' => ['logout', 'index', 'generate', 'fall'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
-                ],
-            ],
-            'verbs' => [
-                'class' => VerbFilter::class,
-                'actions' => [
-                    'logout' => ['post'],
                 ],
             ],
         ];
@@ -56,6 +50,15 @@ class SiteController extends Controller
         ];
     }
 
+    public function getApple($id)
+    {
+        if (($model = Apples::findOne($id)) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('Ошибка при указании яблока');
+    }
+
     /**
      * Displays homepage.
      *
@@ -65,9 +68,57 @@ class SiteController extends Controller
     {
         $apples = Apples::find()->all();
 
+        if ($post = Yii::$app->request->post()) {
+            if (empty($post['id']) || empty($post['percent']) || !is_numeric($post['percent'])) {
+                Yii::$app->session->setFlash('error', 'Необходимо указать число');
+            } else {
+                if ($apple = $this->getApple((int)$post['id'])) {
+                    if ($error = $apple->eat((int)$post['percent'])) {
+                        Yii::$app->session->setFlash('error', $error);
+                    } else {
+                        if ($apple->rest > 0) {
+                            Yii::$app->session->setFlash('success', 'Яблоко успешно откушено');
+                        } else {
+                            Yii::$app->session->setFlash('success', 'Яблоко успешно съедено');
+                        }
+                    }
+
+                    return $this->redirect(['index']);
+                } else {
+                    Yii::$app->session->setFlash('error', 'Ошибка определения яблока');
+                }
+            }
+        }
+
         return $this->render('index', [
             'apples' => $apples,
         ]);
+    }
+
+    /**
+     * Displays homepage.
+     *
+     * @return string
+     */
+    public function actionFall()
+    {
+        if ($get = Yii::$app->request->get()) {
+            if (empty($get['id'])) {
+                Yii::$app->session->setFlash('error', 'Ошибка определения яблока');
+            } else {
+                if ($apple = $this->getApple((int)$get['id'])) {
+                    if ($error = $apple->fall()) {
+                        Yii::$app->session->setFlash('error', $error);
+                    } else {
+                        Yii::$app->session->setFlash('success', 'Яблоко сорвано');
+                    }
+                } else {
+                    Yii::$app->session->setFlash('error', 'Ошибка определения яблока');
+                }
+            }
+        }
+
+        return $this->redirect(['index']);
     }
 
     /**
@@ -123,6 +174,7 @@ class SiteController extends Controller
 
         return $this->goHome();
     }
+
 
 /*
     public function actionRespass()

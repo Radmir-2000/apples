@@ -11,6 +11,7 @@ use Yii;
  * @property string $color
  * @property int $status
  * @property int $rest
+ * @property int $wormy
  * @property string $birthdate
  * @property string $felldate
  */
@@ -34,7 +35,7 @@ class Apples extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['status', 'rest'], 'integer'],
+            [['status', 'rest', 'wormy'], 'integer'],
             [['birthdate', 'felldate'], 'safe'],
             [['color'], 'string', 'max' => 6],
         ];
@@ -50,6 +51,7 @@ class Apples extends \yii\db\ActiveRecord
             'color' => 'Цвет',
             'status' => 'Статус',
             'rest' => 'Остаток',
+            'wormy' => 'Червивое',
             'birthdate' => 'Дата появления',
             'felldate' => 'Дата падения',
         ];
@@ -66,7 +68,31 @@ class Apples extends \yii\db\ActiveRecord
 
     private function setBirthDate()
     {
-        $this->birthdate = date('Y-m-d H:i:s', strtotime('-' . mt_rand(0, 300) . ' SECONDS'));
+        $this->birthdate = date('Y-m-d H:i:s', strtotime('-' . mt_rand(0, 300) . ' MINUTES'));
+    }
+
+    private function setWormy()
+    {
+        $this->wormy = mt_rand(0, 100) <= 20 ? 1 : 0;
+    }
+
+    public function getStatusTitle()
+    {
+        $result = 'Висит';
+        $rots = '';
+        $wormy = '';
+        if ($this->status > 0) {
+            $result = 'Лежит';
+
+            if ($this->felldate < date('Y-m-d H:i:s', strtotime('-5 HOURS'))) {
+                $rots = ' и начало гнить';
+            }
+        }
+        if ($this->wormy == 1) {
+            $wormy = ($rots ? ', да ещё и ' : ', но ') . 'червивое';
+        }
+
+        return $result . $rots . $wormy;
     }
 
     public static function create()
@@ -74,6 +100,7 @@ class Apples extends \yii\db\ActiveRecord
         $apple = new self();
         $apple->setColor();
         $apple->setBirthDate();
+        $apple->setWormy();
         $apple->save();
 
         return $apple;
@@ -81,11 +108,39 @@ class Apples extends \yii\db\ActiveRecord
 
     public function eat($percent)
     {
+        if ($this->rest < $percent) {
+            return 'Нельзя скушать больше, чем есть';
+        }
+        if ($this->status == 0) {
+            return 'Яблоко необходимо сначала сорвать';
+        }
+        if (($this->status == 1) && ($this->felldate < date('Y-m-d H:i:s', strtotime('-5 HOURS')))) {
+            return 'Яблоко уже начало гнить';
+        }
+        if ($this->wormy == 1) {
+            return 'Яблоко червивое';
+        }
 
+        $this->rest = $this->rest - $percent;
+        $this->rest <= 0 ? $this->delete() : $this->save();
+
+        return '';
     }
 
     public function fall()
     {
+        if ($this->status > 0) {
+            if ($this->felldate) {
+                return 'Яблоко уже сорвано';
+            } else {
+                return 'Яблоко уже упало';
+            }
+        }
 
+        $this->status = 1;
+        $this->felldate = date('Y-m-d H:i:s');
+        $this->save();
+
+        return '';
     }
 }

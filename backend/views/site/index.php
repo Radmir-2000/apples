@@ -28,7 +28,7 @@ $this->title = 'Яблочки';
                     <td style="width: 20%; height: 240px; vertical-align: top; background-color: #<?=$apple->color?>; position: relative; padding: 0; font-size: 14px;">
                         <div style="position: relative; z-index: 100; height: 20%; background-color: #fff;">
                             Появление: <?=$apple->birthdate?><br>
-                            Состояние: <?=$apple->status?> Остаток: <?=$apple->rest?>
+                            <?=$apple->getStatusTitle()?>, осталось <?=$apple->rest?>%
                         </div>
 
                         <div style="position: relative; z-index: 100; height: 60%; background: url(/images/apple.png) no-repeat center center; background-size: cover; background-clip: border-box;">
@@ -36,8 +36,7 @@ $this->title = 'Яблочки';
 
                         <div style="position: relative; z-index: 100; height: 20%; background-color: #fff;">
                             <?php print Html::a('Сорвать', Url::to(['fall', 'id' => $apple->id])); ?>
-                            <?php print Html::a('Откусить', Url::to(['eat', 'id' => $apple->id]), ['onclick' => 'eat()']); ?>
-                            <?php print Html::a('Откусить', '#', ['onclick' => 'eat()']); ?>
+                            <?php print Html::a('Откусить', '#', ['onclick' => 'eat(' . $apple->id . ')']); ?>
                         </div>
 
                         <?php if (($index + 1) % 5 == 0) { ?>
@@ -61,7 +60,9 @@ $this->title = 'Яблочки';
             </div>
 
             <div class="modal-body">
-                <form id="eatPercent" method="get">
+                <form id="eatPercent" method="post">
+                    <?=Html::hiddenInput('_csrf-backend', Yii::$app->request->getCsrfToken()) ?>
+                    <?=Html::hiddenInput('id', '', ['id' => 'id']) ?>
                     <?=Html::input('text', 'percent', '') ?>
                 </form>
             </div>
@@ -76,7 +77,8 @@ $this->title = 'Яблочки';
 </div>
 
 <?php $this->registerJs('
-    var eat = function() {
+    var eat = function(id) {
+        $("#id").val(id);
         $("#modalPercent").toggle();
     };
 
