@@ -25,13 +25,13 @@ $this->title = 'Яблочки';
         <table style="width: 100%">
             <tr>
                 <?php foreach ($apples as $index => $apple) { ?>
-                    <td style="width: 20%; height: 240px; vertical-align: top; background-color: #<?=$apple->color?>; position: relative; padding: 0; font-size: 14px;">
-                        <div style="position: relative; z-index: 100; height: 20%; background-color: #fff;">
+                    <td style="width: 20%; height: 260px; vertical-align: top; background-color: #<?=$apple->color?>; position: relative; padding: 0; font-size: 12px;">
+                        <div style="position: relative; z-index: 100; height: 25%; background-color: #fff;">
                             Появление: <?=$apple->birthdate?><br>
-                            <?=$apple->getStatusTitle()?>, осталось <?=$apple->rest?>%
+                            <?=$apple->getStatusTitle()?>. Осталось <?=$apple->rest?>%
                         </div>
 
-                        <div style="position: relative; z-index: 100; height: 60%; background: url(/images/apple.png) no-repeat center center; background-size: cover; background-clip: border-box;">
+                        <div style="position: relative; z-index: 100; height: 55%; background: url(/images/apple.png) no-repeat center center; background-size: cover; background-clip: border-box;">
                         </div>
 
                         <div style="position: relative; z-index: 100; height: 20%; background-color: #fff;">
